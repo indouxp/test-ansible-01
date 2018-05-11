@@ -1,0 +1,65 @@
+---
+- hosts: localhost
+  gather_facts: no
+  vars:
+    strabc: a,b,c
+    listabc: [a, b, c]
+  tasks:
+    - name: "OK: ['a', 'b', 'c']"
+      debug:
+        msg: |
+          {{ strabc.split(',') }}
+    - name: "OK: 'a,b,c'"
+      debug:
+        msg: |
+          {{ ','.join(listabc) }}
+    - name: "OK: ['a', 'b']"
+      debug:
+        msg: |
+          {{ listabc[0:2] }}
+    - name: "OK: a,b,c"
+      debug:
+        msg: |
+          {% set o = strabc %}
+          {{ o }}
+    - name: "NG: Sequence assignment"
+      debug:
+        msg: |
+          {% set listabc[0] = 1 %}
+          {{ listabc }}
+      when: false
+    - name: "NG: Built-in functions like len(), map()"
+      debug:
+        msg: |
+          {{ len(listabc) }}
+      when: false
+    - name: "NG: Expression only in {% %} statement"
+      debug:
+        msg: |
+          {% listabc.append(1) %}
+          {{ listabc }}
+      when: false
+    - name: "NG: Expression-statement expansion"
+      debug:
+        msg: |
+          {% do listabc.append(1) %}
+          {{ listabc }}
+      when: false
+    - name: "OK: ['a', 'b', 'c', 1]"
+      debug:
+        msg: |
+          {% if listabc.append(1) %}{% endif %}
+          {{ listabc }}
+    - name: "OK: ['a', 'b', 'c', 1, 2, 3]"
+      debug:
+        msg: |
+          {% set dummy = listabc.extend([1, 2, 3]) %}
+          {{ listabc }}
+    - name: "OK: ['a', 'b', 'c', 1]"
+      debug:
+        msg: |
+          {% set o = [1] %}
+          {% for i in listabc %}
+          {%   set o = o + [ i + ':123' ] %}
+          {% endfor %}
+          {{ o }}
